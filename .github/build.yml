@@ -1,0 +1,61 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Sync Capacitor (copy www/ into the native project)
+        run: npx cap sync android
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Read versionName from build.gradle
+        id: appver
+        run: |
+          VERSION=$(grep -oP 'versionName\s+"\K[^"]+' android/app/build.gradle)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # ملحوظة: دي نسخة APK موقّعة بمفتاح debug (مؤقت وكافي للتوزيع الداخلي
+      # على الموظفين مباشرة). لو حبيت لاحقًا نسخة "رسمية" أنضف، محتاجين
+      # نضيف keystore حقيقي وتوقيع release — خطوة منفصلة نعملها وقت الحاجة.
+      - name: Rename APK with version
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             "dist/ONTHLINE-${{ steps.appver.outputs.version }}.apk"
+
+      - name: Create GitHub Release with the APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.appver.outputs.version }}
+          name: ONTHLINE v${{ steps.appver.outputs.version }}
+          files: dist/*.apk
