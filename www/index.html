@@ -964,6 +964,7 @@
   .report-print-header{
     padding:22px 24px 4px;
     display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    flex-wrap:wrap;
   }
   .report-print-header h3{
     margin:0 0 4px 0; font-family:var(--font-display); font-size:18px; font-weight:800; color:var(--text-primary);
@@ -1266,7 +1267,7 @@
     .topbar-title span{ font-size:11px; }
     .topbar-date{ display:none; }
 
-    .page{ padding:14px; }
+    .page{ padding:14px 14px 96px; }
 
     /* Login screen */
     .login-form-panel{ padding:32px 20px; }
@@ -1368,7 +1369,29 @@
     /* Reports toolbar */
     .reports-toolbar-left{ width:100%; gap:12px; }
 
+    /* Card headers (title + action button/group) — was cramming the
+       title and buttons onto one row, squeezing/overlapping them on
+       narrow screens. Stack title above actions, full width. */
+    .report-print-header{ flex-direction:column; align-items:stretch; padding:18px 16px 4px; }
+    .report-print-header > button{ width:100%; justify-content:center; }
+    .payroll-header-actions{ width:100%; justify-content:flex-start; }
+    .payroll-payment-controls{ width:100%; flex-wrap:wrap; }
+    .payroll-payment-controls .month-select{ flex:1; min-width:120px; }
+    .payroll-payment-controls #payroll-mark-paid-btn{ flex:1; justify-content:center; }
+    .payroll-paid-badge{ width:100%; }
+
+    /* Employee/period filters and add-record buttons above tables */
+    .month-select-wrap{ flex-wrap:wrap; }
+    .month-select-wrap .month-select{ min-width:0; flex:1; }
+
     .toast{ left:14px; right:14px; bottom:14px; }
+
+    /* Floating AI chat button was sitting directly over the last bit of
+       content on every page (table rows, save buttons, etc). Page
+       padding above now leaves room for it; shrink it a bit too so it
+       blocks less on a small screen. */
+    .chat-toggle-btn{ width:50px; height:50px; bottom:16px; right:16px; }
+    .chat-panel{ bottom:76px; right:10px; width:calc(100vw - 20px); height:min(70vh, 520px); }
   }
 
   @media (max-width: 400px){
@@ -2327,6 +2350,26 @@
           </div>
           <div class="inv-stat-tile inv-in">
             <div class="inv-stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="inv-stat-body">
+              <div class="inv-stat-label">Manual Bonus</div>
+              <div class="inv-stat-value" id="payroll-manual-bonus">—</div>
+              <div class="inv-stat-qty" id="payroll-manual-bonus-count">no bonuses this period</div>
+            </div>
+          </div>
+          <div class="inv-stat-tile inv-out">
+            <div class="inv-stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="inv-stat-body">
+              <div class="inv-stat-label">Manual Deduction</div>
+              <div class="inv-stat-value" id="payroll-manual-deduction">—</div>
+              <div class="inv-stat-qty" id="payroll-manual-deduction-count">no deductions this period</div>
+            </div>
+          </div>
+          <div class="inv-stat-tile inv-in">
+            <div class="inv-stat-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <div class="inv-stat-body">
@@ -2427,6 +2470,64 @@
         </div>
       </div>
 
+      <div class="table-card" id="payroll-leaves-card">
+        <div class="report-print-header">
+          <div>
+            <h3>Paid Leaves</h3>
+            <p>Mark a specific day as a paid leave for an employee — it's paid in full and never counted as an absence.</p>
+          </div>
+          <button class="btn-outline-sm" type="button" id="add-leave-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Paid Leave
+          </button>
+        </div>
+        <div class="table-scroll">
+          <table id="payroll-leaves-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Note</th>
+                <th>Recorded By</th>
+              </tr>
+            </thead>
+            <tbody id="payroll-leaves-tbody">
+              <!-- rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card" id="payroll-adjustments-card">
+        <div class="report-print-header">
+          <div>
+            <h3>Bonuses &amp; Deductions</h3>
+            <p>Add a one-off bonus or deduction for an employee, tied to a date — it folds into whichever payslip covers that date.</p>
+          </div>
+          <button class="btn-outline-sm" type="button" id="add-adjustment-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Bonus / Deduction
+          </button>
+        </div>
+        <div class="table-scroll">
+          <table id="payroll-adjustments-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Reason</th>
+                <th>Recorded By</th>
+              </tr>
+            </thead>
+            <tbody id="payroll-adjustments-tbody">
+              <!-- rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="table-card" id="payroll-payments-card">
         <div class="report-print-header">
           <div>
@@ -2490,6 +2591,93 @@
           <button class="btn-signin" id="advance-confirm-btn" type="button">
             <span class="spinner" id="advance-confirm-spinner"></span>
             <span id="advance-confirm-label">Add Advance</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD PAID LEAVE MODAL -->
+    <div class="modal-overlay" id="leave-modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Add Paid Leave</h3>
+          <button class="modal-close" id="leave-modal-close" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="field-group">
+            <label>Employee</label>
+            <select id="leave-employee-select">
+              <option value="">Select an employee…</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Date</label>
+            <input type="date" id="leave-date">
+          </div>
+
+          <div class="field-group" style="margin-bottom:8px;">
+            <label>Note (optional)</label>
+            <input type="text" id="leave-note" placeholder="e.g. Annual leave">
+          </div>
+
+          <div class="modal-error" id="leave-modal-error"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" id="leave-cancel-btn" type="button">Cancel</button>
+          <button class="btn-signin" id="leave-confirm-btn" type="button">
+            <span class="spinner" id="leave-confirm-spinner"></span>
+            <span id="leave-confirm-label">Add Paid Leave</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD BONUS / DEDUCTION MODAL -->
+    <div class="modal-overlay" id="adjustment-modal-overlay">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>Add Bonus / Deduction</h3>
+          <button class="modal-close" id="adjustment-modal-close" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="field-group">
+            <label>Employee</label>
+            <select id="adjustment-employee-select">
+              <option value="">Select an employee…</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Type</label>
+            <select id="adjustment-type-select">
+              <option value="bonus">Bonus</option>
+              <option value="deduction">Deduction</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Amount</label>
+            <input type="number" id="adjustment-amount" min="0" step="0.01" placeholder="e.g. 200">
+          </div>
+
+          <div class="field-group">
+            <label>Date</label>
+            <input type="date" id="adjustment-date">
+          </div>
+
+          <div class="field-group" style="margin-bottom:8px;">
+            <label>Reason</label>
+            <input type="text" id="adjustment-reason" placeholder="e.g. Performance bonus / Damaged equipment">
+          </div>
+
+          <div class="modal-error" id="adjustment-modal-error"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" id="adjustment-cancel-btn" type="button">Cancel</button>
+          <button class="btn-signin" id="adjustment-confirm-btn" type="button">
+            <span class="spinner" id="adjustment-confirm-spinner"></span>
+            <span id="adjustment-confirm-label">Add Bonus / Deduction</span>
           </button>
         </div>
       </div>
@@ -2778,6 +2966,91 @@
     <div class="modal-footer">
       <button class="btn-cancel" id="reset-pw-cancel-btn" type="button">Cancel</button>
       <button class="btn-signin" id="reset-pw-confirm-btn" type="button">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="profile-modal-title">Employee Profile</h3>
+      <button class="modal-close" id="profile-modal-close" type="button">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Photo URL</label>
+        <input type="text" id="profile-photo-url" placeholder="Link to a photo (optional)">
+      </div>
+      <div class="field-group">
+        <label>National ID</label>
+        <input type="text" id="profile-national-id" placeholder="e.g. 29001011234567">
+      </div>
+      <div class="field-group">
+        <label>Birth Date</label>
+        <input type="date" id="profile-birth-date">
+      </div>
+      <div class="field-group">
+        <label>Marital Status</label>
+        <select id="profile-marital-status">
+          <option value="">—</option>
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+          <option value="Divorced">Divorced</option>
+          <option value="Widowed">Widowed</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Number of Children</label>
+        <input type="number" id="profile-children-count" min="0" step="1" placeholder="0">
+      </div>
+      <div class="field-group">
+        <label>Address</label>
+        <input type="text" id="profile-address" placeholder="Home address">
+      </div>
+      <div class="field-group">
+        <label>Emergency Contact Name</label>
+        <input type="text" id="profile-emergency-name" placeholder="e.g. Mona Ahmed">
+      </div>
+      <div class="field-group">
+        <label>Emergency Contact Phone</label>
+        <input type="text" id="profile-emergency-phone" placeholder="e.g. 01012345678">
+      </div>
+      <div class="field-group">
+        <label>Job Title</label>
+        <input type="text" id="profile-job-title" placeholder="e.g. Storekeeper">
+      </div>
+      <div class="field-group">
+        <label>Department</label>
+        <input type="text" id="profile-department" placeholder="e.g. Warehouse">
+      </div>
+      <div class="field-group">
+        <label>Hire Date</label>
+        <input type="date" id="profile-hire-date">
+      </div>
+      <div class="field-group">
+        <label>Contract Type</label>
+        <select id="profile-contract-type">
+          <option value="">—</option>
+          <option value="Full-time">Full-time</option>
+          <option value="Part-time">Part-time</option>
+          <option value="Contractor">Contractor</option>
+          <option value="Temporary">Temporary</option>
+        </select>
+      </div>
+      <div class="field-group" style="margin-bottom:8px;">
+        <label>Direct Manager</label>
+        <select id="profile-manager-select">
+          <option value="">No manager set</option>
+        </select>
+      </div>
+      <div class="modal-error" id="profile-modal-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="profile-cancel-btn" type="button">Cancel</button>
+      <button class="btn-signin" id="profile-confirm-btn" type="button">
+        <span id="profile-confirm-label">Save Profile</span>
+      </button>
     </div>
   </div>
 </div>
@@ -3229,6 +3502,33 @@ function mapAdvanceRow(row){
   };
 }
 
+function mapManualLeaveRow(row){
+  return {
+    id: row.id,
+    authUserId: row.auth_user_id,
+    username: row.username,
+    date: row.date,
+    note: row.note || "",
+    createdBy: row.created_by || "",
+    createdAt: row.created_at
+  };
+}
+
+function mapAdjustmentRow(row){
+  return {
+    id: row.id,
+    authUserId: row.auth_user_id,
+    username: row.username,
+    type: row.type, // 'bonus' | 'deduction'
+    amount: Number(row.amount) || 0,
+    reason: row.reason || "",
+    date: row.date,
+    paymentId: row.payment_id || null,
+    createdBy: row.created_by || "",
+    createdAt: row.created_at
+  };
+}
+
 function mapPaymentRow(row){
   return {
     id: row.id,
@@ -3242,11 +3542,35 @@ function mapPaymentRow(row){
     absenceDeduction: Number(row.absence_deduction) || 0,
     overtimePay: Number(row.overtime_pay) || 0,
     advanceDeduction: Number(row.advance_deduction) || 0,
+    manualBonus: Number(row.manual_bonus) || 0,
+    manualDeduction: Number(row.manual_deduction) || 0,
     netPay: Number(row.net_pay) || 0,
     paymentMethod: row.payment_method || "",
     approvedBy: row.approved_by || "",
     paidAt: row.paid_at,
     isLocked: row.is_locked !== false // every recorded payment is locked by design — see recordPayrollPayment
+  };
+}
+
+function mapEmployeeProfileRow(row){
+  return {
+    authUserId: row.auth_user_id,
+    username: row.username,
+    nationalId: row.national_id || "",
+    birthDate: row.birth_date || "",
+    maritalStatus: row.marital_status || "",
+    childrenCount: row.children_count != null ? Number(row.children_count) : null,
+    address: row.address || "",
+    emergencyContactName: row.emergency_contact_name || "",
+    emergencyContactPhone: row.emergency_contact_phone || "",
+    photoUrl: row.photo_url || "",
+    jobTitle: row.job_title || "",
+    department: row.department || "",
+    hireDate: row.hire_date || "",
+    contractType: row.contract_type || "",
+    managerId: row.manager_id || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
   };
 }
 
@@ -3636,6 +3960,56 @@ const Api = {
   },
 
   /**
+   * Fetches every employee_profiles row. RLS scopes what actually comes
+   * back: an Admin gets every row, a regular employee gets only their own
+   * (see the SQL migration — same auth.uid()-based pattern as public.users).
+   * Loaded in full on Users.onEnter, same as getUsers.
+   */
+  async getEmployeeProfiles(){
+    const { data, error } = await supabaseClient
+      .from('employee_profiles')
+      .select('auth_user_id, username, national_id, birth_date, marital_status, children_count, address, emergency_contact_name, emergency_contact_phone, photo_url, job_title, department, hire_date, contract_type, manager_id, created_at, updated_at');
+
+    if(error) throw new Error(error.message);
+    return (data || []).map(mapEmployeeProfileRow);
+  },
+
+  /**
+   * Admin only (enforced by RLS insert/update policies). Creates or updates
+   * one employee's profile row. Upserts on auth_user_id so re-saving the
+   * same employee's profile just updates the existing row instead of
+   * creating a duplicate — one profile row per employee, by design.
+   */
+  async upsertEmployeeProfile(authUserId, username, fields){
+    const payload = {
+      auth_user_id: authUserId,
+      username: username,
+      national_id: fields.nationalId || null,
+      birth_date: fields.birthDate || null,
+      marital_status: fields.maritalStatus || null,
+      children_count: fields.childrenCount === "" || fields.childrenCount == null ? null : Number(fields.childrenCount),
+      address: fields.address || null,
+      emergency_contact_name: fields.emergencyContactName || null,
+      emergency_contact_phone: fields.emergencyContactPhone || null,
+      photo_url: fields.photoUrl || null,
+      job_title: fields.jobTitle || null,
+      department: fields.department || null,
+      hire_date: fields.hireDate || null,
+      contract_type: fields.contractType || null,
+      manager_id: fields.managerId || null,
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await supabaseClient
+      .from('employee_profiles')
+      .upsert(payload, { onConflict: 'auth_user_id' })
+      .select('auth_user_id, username, national_id, birth_date, marital_status, children_count, address, emergency_contact_name, emergency_contact_phone, photo_url, job_title, department, hire_date, contract_type, manager_id, created_at, updated_at')
+      .single();
+
+    if(error) throw new Error(error.message);
+    return mapEmployeeProfileRow(data);
+  },
+
+  /**
    * Admin only (enforced by RLS). Fetches the weekly-salary settings row
    * for every employee that has one set. Employees with no row yet are
    * treated as weeklySalary = 0 on the Payroll page.
@@ -3760,6 +4134,105 @@ const Api = {
   },
 
   /**
+   * Admin only. Fetches every manual paid-leave day ever recorded, across
+   * all employees. Loaded in full on Payroll.onEnter — same pattern as
+   * getPayrollAdvances — and grouped client-side by auth_user_id so
+   * buildDayRows() can look a date up per employee in O(1).
+   */
+  async getPayrollManualLeaves(){
+    const { data, error } = await supabaseClient
+      .from('payroll_manual_leaves')
+      .select('id, auth_user_id, username, date, note, created_by, created_at')
+      .order('date', { ascending: false });
+
+    if(error) throw new Error(error.message);
+    return (data || []).map(mapManualLeaveRow);
+  },
+
+  /**
+   * Admin only. Marks one specific calendar day as a paid leave for one
+   * employee. buildDayRows() checks this table (by auth_user_id) before
+   * falling back to the attendance-derived status, so the day shows as
+   * "Paid Leave" and is excluded from the absence deduction — even with
+   * no attendance record for that day at all.
+   */
+  async addPayrollManualLeave(authUserId, username, date, note){
+    const { data, error } = await supabaseClient
+      .from('payroll_manual_leaves')
+      .insert({
+        auth_user_id: authUserId,
+        username: username,
+        date: date,
+        note: note || null,
+        created_by: AppState.currentUser ? AppState.currentUser.name : null
+      })
+      .select('id, auth_user_id, username, date, note, created_by, created_at')
+      .single();
+
+    if(error) throw new Error(error.message);
+    return mapManualLeaveRow(data);
+  },
+
+  /**
+   * Admin only. Fetches every manual bonus/deduction ever recorded, across
+   * all employees. Loaded in full on Payroll.onEnter — same pattern as
+   * getPayrollAdvances/getPayrollManualLeaves. Unlike advances, these
+   * aren't filtered by an "outstanding" status: each one is scoped to the
+   * pay period containing its own `date`, so getAdjustmentsForEmployee()
+   * just matches it against that period's day rows.
+   */
+  async getPayrollAdjustments(){
+    const { data, error } = await supabaseClient
+      .from('payroll_adjustments')
+      .select('id, auth_user_id, username, type, amount, reason, date, payment_id, created_by, created_at')
+      .order('date', { ascending: false });
+
+    if(error) throw new Error(error.message);
+    return (data || []).map(mapAdjustmentRow);
+  },
+
+  /**
+   * Admin only. Records a one-off manual bonus or deduction for one
+   * employee, tied to a specific date — it folds into whichever pay
+   * period that date falls in when the payslip is built.
+   */
+  async addPayrollAdjustment(authUserId, username, type, amount, reason, date){
+    const { data, error } = await supabaseClient
+      .from('payroll_adjustments')
+      .insert({
+        auth_user_id: authUserId,
+        username: username,
+        type: type,
+        amount: amount,
+        reason: reason || null,
+        date: date,
+        created_by: AppState.currentUser ? AppState.currentUser.name : null
+      })
+      .select('id, auth_user_id, username, type, amount, reason, date, payment_id, created_by, created_at')
+      .single();
+
+    if(error) throw new Error(error.message);
+    return mapAdjustmentRow(data);
+  },
+
+  /**
+   * Admin only. Stamps the given adjustments with the payslip they were
+   * folded into, purely for audit/traceability (same spirit as
+   * markAdvancesDeducted) — the adjustments are already excluded from
+   * every other period by date, so this doesn't change any calculation.
+   */
+  async markAdjustmentsApplied(ids, paymentId){
+    if(!ids || ids.length === 0) return { success: true };
+    const { error } = await supabaseClient
+      .from('payroll_adjustments')
+      .update({ payment_id: paymentId })
+      .in('id', ids);
+
+    if(error) throw new Error(error.message);
+    return { success: true };
+  },
+
+  /**
    * Admin only. Fetches the full salary payment history (every payslip an
    * admin has marked as paid), newest first — this is what lets the admin
    * answer "did last week's salary get paid, and how" at any time.
@@ -3767,7 +4240,7 @@ const Api = {
   async getPayrollPayments(){
     const { data, error } = await supabaseClient
       .from('payroll_payments')
-      .select('id, auth_user_id, username, period_type, week_start_key, week_label, weekly_salary, accrued_gross, absence_deduction, overtime_pay, advance_deduction, net_pay, payment_method, approved_by, paid_at')
+      .select('id, auth_user_id, username, period_type, week_start_key, week_label, weekly_salary, accrued_gross, absence_deduction, overtime_pay, advance_deduction, manual_bonus, manual_deduction, net_pay, payment_method, approved_by, paid_at')
       .order('paid_at', { ascending: false });
 
     if(error) throw new Error(error.message);
@@ -3799,12 +4272,14 @@ const Api = {
         absence_deduction: payload.absenceDeduction,
         overtime_pay: payload.overtimePay,
         advance_deduction: payload.advanceDeduction,
+        manual_bonus: payload.manualBonus || 0,
+        manual_deduction: payload.manualDeduction || 0,
         net_pay: payload.netPay,
         payment_method: payload.paymentMethod,
         approved_by: payload.approvedBy,
         is_locked: true
       })
-      .select('id, auth_user_id, username, period_type, week_start_key, week_label, weekly_salary, accrued_gross, absence_deduction, overtime_pay, advance_deduction, net_pay, payment_method, approved_by, paid_at')
+      .select('id, auth_user_id, username, period_type, week_start_key, week_label, weekly_salary, accrued_gross, absence_deduction, overtime_pay, advance_deduction, manual_bonus, manual_deduction, net_pay, payment_method, approved_by, paid_at')
       .single();
 
     if(error) throw new Error(error.message);
@@ -5010,6 +5485,16 @@ const Users = {
       AppState.usersData = data;
       AppState.isUsersLoaded = true;
       this.render();
+      // Employee profiles aren't required for the Users table itself, so a
+      // failure here never blocks the user list from rendering — only the
+      // Profile modal needs this data, and it re-tries on next open if empty.
+      try{
+        const profiles = await Api.getEmployeeProfiles();
+        AppState.employeeProfilesByAuthUserId = {};
+        profiles.forEach(p => { AppState.employeeProfilesByAuthUserId[p.authUserId] = p; });
+      } catch(profileErr){
+        console.error("Employee profiles load error:", profileErr);
+      }
     } catch(err){
       console.error("Users load error:", err);
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);">${Utils.escapeHtml(err.message || "Failed to load users.")}</td></tr>`;
@@ -5041,6 +5526,9 @@ const Users = {
         <td><span class="status-pill ${u.status === 'Active' ? 'present' : 'absent'}">${Utils.escapeHtml(u.status)}</span></td>
         <td>${Utils.escapeHtml(u.lastActive)}</td>
         <td>
+          <button class="btn-outline-sm" type="button" data-profile-username="${Utils.escapeHtml(u.username)}">
+            Profile
+          </button>
           <button class="btn-outline-sm" type="button" data-reset-username="${Utils.escapeHtml(u.username)}">
             Reset Password
           </button>
@@ -5196,9 +5684,131 @@ const Users = {
     // Event delegation: the Reset Password buttons are re-rendered on every
     // load(), so listen on the (static) tbody instead of the buttons themselves.
     document.getElementById('users-tbody').addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-reset-username]');
-      if(btn) this.openResetPwModal(btn.dataset.resetUsername);
+      const resetBtn = e.target.closest('[data-reset-username]');
+      if(resetBtn) this.openResetPwModal(resetBtn.dataset.resetUsername);
+      const profileBtn = e.target.closest('[data-profile-username]');
+      if(profileBtn) EmployeeProfiles.open(profileBtn.dataset.profileUsername);
     });
+  }
+};
+
+/* ================================================================
+   EMPLOYEE PROFILES (Admin only — Users page "Profile" button)
+   One row per employee in employee_profiles, upserted on auth_user_id.
+   Independent of payroll calculation — buildDayRows()/computeSummary()
+   are untouched by this module.
+   ================================================================ */
+const EmployeeProfiles = {
+  targetUser: null, // the AppState.usersData entry currently open in the modal
+
+  populateManagerSelect(excludeAuthUserId){
+    const select = document.getElementById('profile-manager-select');
+    if(!select) return;
+    const users = AppState.usersData || [];
+    select.innerHTML = `<option value="">No manager set</option>` + users
+      .filter(u => u.authUserId && u.authUserId !== excludeAuthUserId)
+      .map(u => `<option value="${Utils.escapeHtml(u.authUserId)}">${Utils.escapeHtml(u.name || u.username)}</option>`)
+      .join("");
+  },
+
+  open(username){
+    const user = (AppState.usersData || []).find(u => u.username === username);
+    if(!user){ Utils.toast("Could not find this user.", true); return; }
+    if(!user.authUserId){ Utils.toast("This user has no linked account id yet.", true); return; }
+
+    this.targetUser = user;
+    document.getElementById('profile-modal-title').textContent = `Profile — ${user.name || user.username}`;
+    this.populateManagerSelect(user.authUserId);
+
+    const existing = (AppState.employeeProfilesByAuthUserId || {})[user.authUserId] || {};
+    document.getElementById('profile-photo-url').value = existing.photoUrl || "";
+    document.getElementById('profile-national-id').value = existing.nationalId || "";
+    document.getElementById('profile-birth-date').value = existing.birthDate || "";
+    document.getElementById('profile-marital-status').value = existing.maritalStatus || "";
+    document.getElementById('profile-children-count').value = existing.childrenCount != null ? existing.childrenCount : "";
+    document.getElementById('profile-address').value = existing.address || "";
+    document.getElementById('profile-emergency-name').value = existing.emergencyContactName || "";
+    document.getElementById('profile-emergency-phone').value = existing.emergencyContactPhone || "";
+    document.getElementById('profile-job-title').value = existing.jobTitle || "";
+    document.getElementById('profile-department').value = existing.department || "";
+    document.getElementById('profile-hire-date').value = existing.hireDate || "";
+    document.getElementById('profile-contract-type').value = existing.contractType || "";
+    document.getElementById('profile-manager-select').value = existing.managerId || "";
+
+    this.hideError();
+    document.getElementById('profile-modal-overlay').classList.add('show');
+  },
+
+  close(){
+    document.getElementById('profile-modal-overlay').classList.remove('show');
+    this.targetUser = null;
+  },
+
+  showError(message){
+    const el = document.getElementById('profile-modal-error');
+    el.textContent = message;
+    el.classList.add('show');
+  },
+
+  hideError(){
+    const el = document.getElementById('profile-modal-error');
+    el.textContent = "";
+    el.classList.remove('show');
+  },
+
+  async save(){
+    if(!this.targetUser){ this.close(); return; }
+    this.hideError();
+
+    const childrenRaw = document.getElementById('profile-children-count').value;
+    if(childrenRaw !== "" && (isNaN(Number(childrenRaw)) || Number(childrenRaw) < 0)){
+      this.showError("Number of children must be 0 or more.");
+      return;
+    }
+
+    const fields = {
+      photoUrl: document.getElementById('profile-photo-url').value.trim(),
+      nationalId: document.getElementById('profile-national-id').value.trim(),
+      birthDate: document.getElementById('profile-birth-date').value,
+      maritalStatus: document.getElementById('profile-marital-status').value,
+      childrenCount: childrenRaw,
+      address: document.getElementById('profile-address').value.trim(),
+      emergencyContactName: document.getElementById('profile-emergency-name').value.trim(),
+      emergencyContactPhone: document.getElementById('profile-emergency-phone').value.trim(),
+      jobTitle: document.getElementById('profile-job-title').value.trim(),
+      department: document.getElementById('profile-department').value.trim(),
+      hireDate: document.getElementById('profile-hire-date').value,
+      contractType: document.getElementById('profile-contract-type').value,
+      managerId: document.getElementById('profile-manager-select').value || null
+    };
+
+    const btn = document.getElementById('profile-confirm-btn');
+    const label = document.getElementById('profile-confirm-label');
+    btn.disabled = true;
+    label.textContent = "Saving…";
+
+    try{
+      const saved = await Api.upsertEmployeeProfile(this.targetUser.authUserId, this.targetUser.username, fields);
+      AppState.employeeProfilesByAuthUserId = AppState.employeeProfilesByAuthUserId || {};
+      AppState.employeeProfilesByAuthUserId[saved.authUserId] = saved;
+      Utils.toast(`Saved profile for ${this.targetUser.name || this.targetUser.username}.`);
+      this.close();
+    } catch(err){
+      console.error("Save employee profile error:", err);
+      this.showError(err.message || "Failed to save profile.");
+    } finally{
+      btn.disabled = false;
+      label.textContent = "Save Profile";
+    }
+  },
+
+  init(){
+    document.getElementById('profile-modal-close').addEventListener('click', () => this.close());
+    document.getElementById('profile-cancel-btn').addEventListener('click', () => this.close());
+    document.getElementById('profile-modal-overlay').addEventListener('click', (e) => {
+      if(e.target.id === 'profile-modal-overlay') this.close();
+    });
+    document.getElementById('profile-confirm-btn').addEventListener('click', () => this.save());
   }
 };
 
@@ -5229,6 +5839,9 @@ const Payroll = {
   weeks: [],
   advances: [],
   payments: [],
+  manualLeaves: [],
+  manualLeavesByAuthUserId: {}, // authUserId -> { dateKey -> leave }
+  adjustments: [],
   PAYMENT_METHODS: ["Cash", "Bank Transfer", "Instapay", "Vodafone Cash"],
   DAY_NAMES: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
   RATE_UNITS: ["day", "week", "month"],
@@ -5243,8 +5856,8 @@ const Payroll = {
     try{
       if(!AppState.isUsersLoaded) await Users.load();
       if(!AppState.isAllAttendanceLoaded) await Reports.loadAllAttendance();
-      const [settings, history, advances, payments] = await Promise.all([
-        Api.getPayrollSettings(), Api.getPayrollSalaryHistory(), Api.getPayrollAdvances(), Api.getPayrollPayments()
+      const [settings, history, advances, payments, manualLeaves, adjustments] = await Promise.all([
+        Api.getPayrollSettings(), Api.getPayrollSalaryHistory(), Api.getPayrollAdvances(), Api.getPayrollPayments(), Api.getPayrollManualLeaves(), Api.getPayrollAdjustments()
       ]);
       this.settingsByUsername = {};
       settings.forEach(s => { this.settingsByUsername[s.username] = s; });
@@ -5255,13 +5868,24 @@ const Payroll = {
       });
       this.advances = advances;
       this.payments = payments;
+      this.manualLeaves = manualLeaves;
+      this.manualLeavesByAuthUserId = {};
+      manualLeaves.forEach(l => {
+        if(!this.manualLeavesByAuthUserId[l.authUserId]) this.manualLeavesByAuthUserId[l.authUserId] = {};
+        this.manualLeavesByAuthUserId[l.authUserId][l.date] = l;
+      });
+      this.adjustments = adjustments;
       this.render();
       this.populatePaymentMethodSelect();
       this.populateAdvanceEmployeeSelect();
+      this.populateLeaveEmployeeSelect();
+      this.populateAdjustmentEmployeeSelect();
       this.populateEmployeeSelect();
       this.populatePeriodSelect();
       this.renderPayslip();
       this.renderAdvancesTable();
+      this.renderLeavesTable();
+      this.renderAdjustmentsTable();
       this.renderPaymentsTable();
     } catch(err){
       console.error("Payroll load error:", err);
@@ -5532,6 +6156,11 @@ const Payroll = {
       byDate[rec.date] = rec;
     });
 
+    // Manual paid leaves are keyed by auth_user_id (not displayName, unlike
+    // attendance above) — see spec 0.3. A day found here always wins over
+    // whatever the attendance-derived status would have been.
+    const leavesByDate = (this.manualLeavesByAuthUserId || {})[employee.authUserId] || {};
+
     const rows = [];
     const cursor = new Date(startDate);
     while(cursor <= endDate){
@@ -5542,8 +6171,26 @@ const Payroll = {
       const isFuture = d2 > today;
       const rec = byDate[dateKey];
       const dayRate = this.getDayRateForDate(employeeKeyValue, dateKey);
+      const leave = leavesByDate[dateKey];
 
-      if(isFuture){
+      if(leave){
+        // Paid leave overrides absence entirely, even with zero attendance
+        // record for the day — it never counts against the employee. If
+        // there happens to be an attendance record too, worked/overtime
+        // minutes are still preserved for the timesheet view.
+        const hasBoth = rec && rec.checkIn && rec.checkOut && rec.checkOut !== '--';
+        const workedMinutes = hasBoth ? Utils.minutesBetween(rec.checkIn, rec.checkOut) : 0;
+        const overtimeMinutes = hasBoth ? Math.max(0, workedMinutes - this.REGULAR_MINUTES_PER_DAY) : 0;
+        rows.push({
+          date: dateKey, dayName,
+          checkIn: rec && rec.checkIn ? rec.checkIn : "—",
+          checkOut: hasBoth ? rec.checkOut : "—",
+          workedMinutes, overtimeMinutes,
+          status: "Paid Leave",
+          countsAsAbsent: false,
+          dayRate
+        });
+      } else if(isFuture){
         rows.push({ date: dateKey, dayName, checkIn:"—", checkOut:"—", workedMinutes:0, overtimeMinutes:0, status:"—", countsAsAbsent:false, dayRate });
       } else if(rec){
         const hasBoth = rec.checkIn && rec.checkOut && rec.checkOut !== '--';
@@ -5591,7 +6238,7 @@ const Payroll = {
    * paid out in cash (per the accountant's rounding policy: nearest
    * whole pound).
    */
-  computeSummary(rows, advanceDeduction){
+  computeSummary(rows, advanceDeduction, adjustments){
     const trackedRows = rows.filter(r => r.status !== "—");
     const absentDays = trackedRows.filter(r => r.countsAsAbsent).length;
     const totalOvertimeMinutes = rows.reduce((sum, r) => sum + (r.overtimeMinutes || 0), 0);
@@ -5605,7 +6252,9 @@ const Payroll = {
       return sum + (r.overtimeMinutes || 0) * minuteRate;
     }, 0);
     const advDeduction = advanceDeduction || 0;
-    const accruedNetPay = grossBaseRaw - deductionRaw + overtimePayRaw - advDeduction;
+    const bonusTotal = (adjustments && adjustments.bonusTotal) || 0;
+    const manualDeductionTotal = (adjustments && adjustments.deductionTotal) || 0;
+    const accruedNetPay = grossBaseRaw - deductionRaw + overtimePayRaw - advDeduction + bonusTotal - manualDeductionTotal;
 
     const currentDayRate = rows.length ? rows[rows.length - 1].dayRate : 0;
 
@@ -5618,6 +6267,8 @@ const Payroll = {
       deduction: this.roundMoney(deductionRaw),
       overtimePay: this.roundMoney(overtimePayRaw),
       advanceDeduction: this.roundMoney(advDeduction),
+      manualBonus: this.roundMoney(bonusTotal),
+      manualDeduction: this.roundMoney(manualDeductionTotal),
       accruedGross: accruedNetPay,          // exact, unrounded — for the books
       netPay: this.roundMoney(accruedNetPay) // rounded — what's actually handed over
     };
@@ -5635,6 +6286,25 @@ const Payroll = {
       a.username === employeeKeyValue &&
       a.status === 'outstanding' &&
       (!uptoDateKey || a.dateGiven <= uptoDateKey)
+    );
+  },
+
+  /**
+   * Unlike advances (which accumulate until settled), a manual adjustment
+   * is scoped to the specific pay period containing its own date — so
+   * this matches each adjustment's date against the period's calendar
+   * range (startKey..endKey inclusive), no status/applied flag needed to
+   * avoid a bonus or deduction leaking into a later payslip.
+   *
+   * NOTE: this used to match against the built day-rows instead of the
+   * calendar range — but buildDayRows skips Fridays (the off day)
+   * entirely, so an adjustment dated on a Friday never matched any row
+   * and silently never applied to any payslip. Matching by date range
+   * instead fixes that.
+   */
+  getAdjustmentsForEmployee(employeeKeyValue, startKey, endKey){
+    return (this.adjustments || []).filter(a =>
+      a.username === employeeKeyValue && a.date >= startKey && a.date <= endKey
     );
   },
 
@@ -5663,13 +6333,18 @@ const Payroll = {
     const setting = this.settingsByUsername[employeeKeyValue];
     const periodType = setting ? setting.paymentCycle : 'weekly';
 
-    let rows, weekEndKey;
+    let rows, weekEndKey, periodStartKey;
     if(periodType === 'monthly'){
       const monthKey = weekInfo ? weekInfo.monthKey : weekStartKey.slice(0, 7);
       rows = this.buildMonthRows(employeeKeyValue, monthKey);
-      weekEndKey = rows.length ? rows[rows.length - 1].date : weekStartKey;
+      const [my, mm] = monthKey.split('-').map(Number);
+      const monthStart = new Date(my, mm - 1, 1);
+      const monthEnd = new Date(my, mm, 0); // last calendar day of the month
+      periodStartKey = Utils.dateKey(monthStart);
+      weekEndKey = Utils.dateKey(monthEnd);
     } else {
       rows = this.buildWeekRows(employeeKeyValue, weekStartKey);
+      periodStartKey = weekStartKey;
       const [y, m, d] = weekStartKey.split('-').map(Number);
       const weekEnd = new Date(y, m - 1, d);
       weekEnd.setDate(weekEnd.getDate() + 5);
@@ -5678,11 +6353,14 @@ const Payroll = {
 
     const outstandingAdvances = this.getOutstandingAdvancesForEmployee(employeeKeyValue, weekEndKey);
     const advanceDeductionTotal = outstandingAdvances.reduce((sum, a) => sum + a.amount, 0);
-    const summary = this.computeSummary(rows, advanceDeductionTotal);
+    const periodAdjustments = this.getAdjustmentsForEmployee(employeeKeyValue, periodStartKey, weekEndKey);
+    const bonusTotal = periodAdjustments.filter(a => a.type === 'bonus').reduce((sum, a) => sum + a.amount, 0);
+    const deductionTotal = periodAdjustments.filter(a => a.type === 'deduction').reduce((sum, a) => sum + a.amount, 0);
+    const summary = this.computeSummary(rows, advanceDeductionTotal, { bonusTotal, deductionTotal });
     const weeklySalary = summary.grossBase; // period base salary, rounded
     const existingPayment = this.findPayment(employeeKeyValue, weekStartKey);
 
-    return { employeeKeyValue, weekStartKey, weekEndKey, periodType, employeeName, weekLabel, weeklySalary, rows, summary, outstandingAdvances, existingPayment };
+    return { employeeKeyValue, weekStartKey, weekEndKey, periodType, employeeName, weekLabel, weeklySalary, rows, summary, outstandingAdvances, periodAdjustments, existingPayment };
   },
 
   renderPayslip(){
@@ -5732,6 +6410,16 @@ const Payroll = {
     document.getElementById('payroll-advance-count').textContent = data.outstandingAdvances.length
       ? data.outstandingAdvances.length + (data.outstandingAdvances.length === 1 ? " outstanding advance" : " outstanding advances")
       : "no outstanding advances";
+    const periodBonuses = data.periodAdjustments.filter(a => a.type === 'bonus');
+    const periodDeductions = data.periodAdjustments.filter(a => a.type === 'deduction');
+    document.getElementById('payroll-manual-bonus').textContent = summary.manualBonus > 0 ? "+ " + this.money(summary.manualBonus) : "—";
+    document.getElementById('payroll-manual-bonus-count').textContent = periodBonuses.length
+      ? periodBonuses.length + (periodBonuses.length === 1 ? " bonus this period" : " bonuses this period")
+      : "no bonuses this period";
+    document.getElementById('payroll-manual-deduction').textContent = summary.manualDeduction > 0 ? "− " + this.money(summary.manualDeduction) : "—";
+    document.getElementById('payroll-manual-deduction-count').textContent = periodDeductions.length
+      ? periodDeductions.length + (periodDeductions.length === 1 ? " deduction this period" : " deductions this period")
+      : "no deductions this period";
     document.getElementById('payroll-net-pay').textContent = this.money(summary.netPay);
     statsEl.style.display = "grid";
 
@@ -5954,6 +6642,14 @@ const Payroll = {
     if(summary.advanceDeduction > 0){
       running -= summary.advanceDeduction;
       breakdownRows.push(['Advance Deduction', 'Outstanding advance(s) settled from this payslip', `- ${this.money(summary.advanceDeduction)}`, this.money(running)]);
+    }
+    if(summary.manualBonus > 0){
+      running += summary.manualBonus;
+      breakdownRows.push(['Manual Bonus', 'One-off bonus(es) recorded for this period', `+ ${this.money(summary.manualBonus)}`, this.money(running)]);
+    }
+    if(summary.manualDeduction > 0){
+      running -= summary.manualDeduction;
+      breakdownRows.push(['Manual Deduction', 'One-off deduction(s) recorded for this period', `- ${this.money(summary.manualDeduction)}`, this.money(running)]);
     }
 
     doc.autoTable({
@@ -6183,6 +6879,8 @@ const Payroll = {
         absenceDeduction: data.summary.deduction,
         overtimePay: data.summary.overtimePay,
         advanceDeduction: data.summary.advanceDeduction,
+        manualBonus: data.summary.manualBonus,
+        manualDeduction: data.summary.manualDeduction,
         netPay: data.summary.netPay,
         paymentMethod: paymentMethod,
         approvedBy: AppState.currentUser ? AppState.currentUser.name : ""
@@ -6198,9 +6896,19 @@ const Payroll = {
         });
       }
 
+      const adjustmentIds = data.periodAdjustments.map(a => a.id);
+      if(adjustmentIds.length){
+        await Api.markAdjustmentsApplied(adjustmentIds, payment.id);
+        adjustmentIds.forEach(id => {
+          const adj = this.adjustments.find(a => a.id === id);
+          if(adj){ adj.paymentId = payment.id; }
+        });
+      }
+
       Utils.toast(`Marked ${data.employeeName}'s payslip as paid.`);
       this.renderPayslip();
       this.renderAdvancesTable();
+      this.renderAdjustmentsTable();
       this.renderPaymentsTable();
     } catch(err){
       console.error("Mark as paid error:", err);
@@ -6320,6 +7028,226 @@ const Payroll = {
     }).join("");
   },
 
+  /* ---------- Manual paid leaves ---------- */
+
+  populateLeaveEmployeeSelect(){
+    const select = document.getElementById('leave-employee-select');
+    if(!select) return;
+    const employees = AppState.usersData || [];
+    select.innerHTML = `<option value="">Select an employee…</option>` + employees.map(u =>
+      `<option value="${Utils.escapeHtml(Reports.employeeKey(u))}">${Utils.escapeHtml(u.name || u.username)}</option>`
+    ).join("");
+  },
+
+  openLeaveModal(){
+    this.populateLeaveEmployeeSelect();
+    const preselect = document.getElementById('payroll-employee-select').value;
+    if(preselect) document.getElementById('leave-employee-select').value = preselect;
+    document.getElementById('leave-date').value = Utils.dateKey(new Date());
+    document.getElementById('leave-note').value = "";
+    this.hideLeaveError();
+    document.getElementById('leave-modal-overlay').classList.add('show');
+  },
+
+  closeLeaveModal(){
+    document.getElementById('leave-modal-overlay').classList.remove('show');
+  },
+
+  showLeaveError(message){
+    const el = document.getElementById('leave-modal-error');
+    el.textContent = message;
+    el.classList.add('show');
+  },
+
+  hideLeaveError(){
+    const el = document.getElementById('leave-modal-error');
+    el.textContent = "";
+    el.classList.remove('show');
+  },
+
+  async submitLeave(){
+    const employeeKeyValue = document.getElementById('leave-employee-select').value;
+    const date = document.getElementById('leave-date').value;
+    const note = document.getElementById('leave-note').value.trim();
+
+    this.hideLeaveError();
+
+    if(!employeeKeyValue){ this.showLeaveError("Select an employee."); return; }
+    if(!date){ this.showLeaveError("Select a date."); return; }
+
+    const employee = Reports.findEmployee(employeeKeyValue);
+    if(!employee || !employee.authUserId){
+      this.showLeaveError("Could not find this employee's account id.");
+      return;
+    }
+
+    const btn = document.getElementById('leave-confirm-btn');
+    const spinner = document.getElementById('leave-confirm-spinner');
+    const label = document.getElementById('leave-confirm-label');
+    btn.disabled = true;
+    spinner.classList.add('show');
+    label.textContent = "Saving…";
+
+    try{
+      const leave = await Api.addPayrollManualLeave(employee.authUserId, employeeKeyValue, date, note);
+      this.manualLeaves.unshift(leave);
+      if(!this.manualLeavesByAuthUserId[leave.authUserId]) this.manualLeavesByAuthUserId[leave.authUserId] = {};
+      this.manualLeavesByAuthUserId[leave.authUserId][leave.date] = leave;
+      this.closeLeaveModal();
+      Utils.toast(`Marked ${date} as a paid leave for ${employee.name || employee.username}.`);
+      this.renderLeavesTable();
+      this.renderPayslip();
+    } catch(err){
+      console.error("Add manual leave error:", err);
+      this.showLeaveError(err.message || "Failed to record paid leave.");
+    } finally {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      label.textContent = "Add Paid Leave";
+    }
+  },
+
+  renderLeavesTable(){
+    const tbody = document.getElementById('payroll-leaves-tbody');
+    if(!tbody) return;
+    // Scoped to whichever employee is selected in the payslip view above —
+    // previously this showed every employee's leaves mixed into one list,
+    // which made it look like leaves weren't separated per employee.
+    const employeeKeyValue = document.getElementById('payroll-employee-select').value;
+    const leaves = (this.manualLeaves || []).filter(l => !employeeKeyValue || l.username === employeeKeyValue);
+
+    if(leaves.length === 0){
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">${employeeKeyValue ? "No paid leaves recorded for this employee yet." : "Select an employee above to see their paid leaves."}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = leaves.map(l => {
+      const employee = Reports.findEmployee(l.username);
+      const employeeName = employee ? (employee.name || employee.username) : l.username;
+      return `
+        <tr>
+          <td>${Utils.escapeHtml(employeeName)}</td>
+          <td>${Utils.escapeHtml(l.date)}</td>
+          <td>${Utils.escapeHtml(l.note || "—")}</td>
+          <td>${Utils.escapeHtml(l.createdBy || "—")}</td>
+        </tr>
+      `;
+    }).join("");
+  },
+
+  /* ---------- Manual bonuses / deductions ---------- */
+
+  populateAdjustmentEmployeeSelect(){
+    const select = document.getElementById('adjustment-employee-select');
+    if(!select) return;
+    const employees = AppState.usersData || [];
+    select.innerHTML = `<option value="">Select an employee…</option>` + employees.map(u =>
+      `<option value="${Utils.escapeHtml(Reports.employeeKey(u))}">${Utils.escapeHtml(u.name || u.username)}</option>`
+    ).join("");
+  },
+
+  openAdjustmentModal(){
+    this.populateAdjustmentEmployeeSelect();
+    const preselect = document.getElementById('payroll-employee-select').value;
+    if(preselect) document.getElementById('adjustment-employee-select').value = preselect;
+    document.getElementById('adjustment-type-select').value = "bonus";
+    document.getElementById('adjustment-amount').value = "";
+    document.getElementById('adjustment-date').value = Utils.dateKey(new Date());
+    document.getElementById('adjustment-reason').value = "";
+    this.hideAdjustmentError();
+    document.getElementById('adjustment-modal-overlay').classList.add('show');
+  },
+
+  closeAdjustmentModal(){
+    document.getElementById('adjustment-modal-overlay').classList.remove('show');
+  },
+
+  showAdjustmentError(message){
+    const el = document.getElementById('adjustment-modal-error');
+    el.textContent = message;
+    el.classList.add('show');
+  },
+
+  hideAdjustmentError(){
+    const el = document.getElementById('adjustment-modal-error');
+    el.textContent = "";
+    el.classList.remove('show');
+  },
+
+  async submitAdjustment(){
+    const employeeKeyValue = document.getElementById('adjustment-employee-select').value;
+    const type = document.getElementById('adjustment-type-select').value;
+    const amount = Number(document.getElementById('adjustment-amount').value);
+    const date = document.getElementById('adjustment-date').value;
+    const reason = document.getElementById('adjustment-reason').value.trim();
+
+    this.hideAdjustmentError();
+
+    if(!employeeKeyValue){ this.showAdjustmentError("Select an employee."); return; }
+    if(type !== 'bonus' && type !== 'deduction'){ this.showAdjustmentError("Select a type."); return; }
+    if(!amount || amount <= 0){ this.showAdjustmentError("Enter an amount greater than 0."); return; }
+    if(!date){ this.showAdjustmentError("Select a date."); return; }
+
+    const employee = Reports.findEmployee(employeeKeyValue);
+    if(!employee || !employee.authUserId){
+      this.showAdjustmentError("Could not find this employee's account id.");
+      return;
+    }
+
+    const btn = document.getElementById('adjustment-confirm-btn');
+    const spinner = document.getElementById('adjustment-confirm-spinner');
+    const label = document.getElementById('adjustment-confirm-label');
+    btn.disabled = true;
+    spinner.classList.add('show');
+    label.textContent = "Saving…";
+
+    try{
+      const adjustment = await Api.addPayrollAdjustment(employee.authUserId, employeeKeyValue, type, amount, reason, date);
+      this.adjustments.unshift(adjustment);
+      this.closeAdjustmentModal();
+      Utils.toast(`Added a ${type} of ${this.money(amount)} for ${employee.name || employee.username}.`);
+      this.renderAdjustmentsTable();
+      this.renderPayslip();
+    } catch(err){
+      console.error("Add adjustment error:", err);
+      this.showAdjustmentError(err.message || "Failed to record bonus/deduction.");
+    } finally {
+      btn.disabled = false;
+      spinner.classList.remove('show');
+      label.textContent = "Add Bonus / Deduction";
+    }
+  },
+
+  renderAdjustmentsTable(){
+    const tbody = document.getElementById('payroll-adjustments-tbody');
+    if(!tbody) return;
+    const adjustments = this.adjustments || [];
+
+    if(adjustments.length === 0){
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">No bonuses or deductions recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = adjustments.map(a => {
+      const employee = Reports.findEmployee(a.username);
+      const employeeName = employee ? (employee.name || employee.username) : a.username;
+      const isBonus = a.type === 'bonus';
+      const pillClass = isBonus ? 'present' : 'absent';
+      const typeLabel = isBonus ? 'Bonus' : 'Deduction';
+      const amountText = (isBonus ? "+ " : "− ") + this.money(a.amount);
+      return `
+        <tr>
+          <td>${Utils.escapeHtml(employeeName)}</td>
+          <td><span class="status-pill ${pillClass}">${typeLabel}</span></td>
+          <td>${amountText}</td>
+          <td>${Utils.escapeHtml(a.date)}</td>
+          <td>${Utils.escapeHtml(a.reason || "—")}</td>
+          <td>${Utils.escapeHtml(a.createdBy || "—")}</td>
+        </tr>
+      `;
+    }).join("");
+  },
+
   /* ---------- Payment history ---------- */
 
   renderPaymentsTable(){
@@ -6358,7 +7286,7 @@ const Payroll = {
       const btn = e.target.closest('[data-save-salary]');
       if(btn) this.saveSalary(btn.dataset.saveSalary);
     });
-    document.getElementById('payroll-employee-select').addEventListener('change', () => { this.populatePeriodSelect(); this.renderPayslip(); });
+    document.getElementById('payroll-employee-select').addEventListener('change', () => { this.populatePeriodSelect(); this.renderPayslip(); this.renderLeavesTable(); });
     document.getElementById('payroll-week-select').addEventListener('change', () => this.renderPayslip());
     document.getElementById('payroll-pdf-btn').addEventListener('click', () => this.downloadPayslip());
     document.getElementById('payroll-mark-paid-btn').addEventListener('click', () => this.markAsPaid());
@@ -6370,6 +7298,22 @@ const Payroll = {
       if(e.target.id === 'advance-modal-overlay') this.closeAdvanceModal();
     });
     document.getElementById('advance-confirm-btn').addEventListener('click', () => this.submitAdvance());
+
+    document.getElementById('add-leave-btn').addEventListener('click', () => this.openLeaveModal());
+    document.getElementById('leave-modal-close').addEventListener('click', () => this.closeLeaveModal());
+    document.getElementById('leave-cancel-btn').addEventListener('click', () => this.closeLeaveModal());
+    document.getElementById('leave-modal-overlay').addEventListener('click', (e) => {
+      if(e.target.id === 'leave-modal-overlay') this.closeLeaveModal();
+    });
+    document.getElementById('leave-confirm-btn').addEventListener('click', () => this.submitLeave());
+
+    document.getElementById('add-adjustment-btn').addEventListener('click', () => this.openAdjustmentModal());
+    document.getElementById('adjustment-modal-close').addEventListener('click', () => this.closeAdjustmentModal());
+    document.getElementById('adjustment-cancel-btn').addEventListener('click', () => this.closeAdjustmentModal());
+    document.getElementById('adjustment-modal-overlay').addEventListener('click', (e) => {
+      if(e.target.id === 'adjustment-modal-overlay') this.closeAdjustmentModal();
+    });
+    document.getElementById('adjustment-confirm-btn').addEventListener('click', () => this.submitAdjustment());
   }
 };
 
@@ -7700,6 +8644,7 @@ document.addEventListener('DOMContentLoaded', () => {
   Attendance.init();
   Transactions.init();
   Users.init();
+  EmployeeProfiles.init();
   Reports.init();
   Payroll.init();
   Dashboard.init();
