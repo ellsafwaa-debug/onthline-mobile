@@ -1,7 +1,7 @@
 {
   "name": "onthline-mobile",
   "productName": "ONTHLINE",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ONTHLINE mobile (Android/iOS) — Capacitor wrapper",
   "scripts": {
     "sync": "cap sync",
